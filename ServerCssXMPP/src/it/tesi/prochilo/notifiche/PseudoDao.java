@@ -1,15 +1,9 @@
 package it.tesi.prochilo.notifiche;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -25,6 +19,9 @@ import java.util.Set;
  * con le stesse credenziali da più devices. In particolare salva una
  * Map<String, List<String> dove la chiave è il token e la lista sono tutti i
  * devices associati alla chiave
+ * 
+ * @author Prochilo
+ * @version 2.0
  */
 public class PseudoDao {
 
@@ -47,19 +44,8 @@ public class PseudoDao {
 	 */
 	private final List<String> mRegisteredUsers = new ArrayList<String>();
 	private final Map<String, String> mNotificationKeyMap = new HashMap<String, String>();
-	/**
-	 * 
-	 */
-	private final String url = "jdbc:mysql://localhost:3306/servertest?autoReconnect=true";
-	private Connection mConnection;
 
 	private PseudoDao() {
-		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			mConnection = DriverManager.getConnection(url, "root", "1234");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public static PseudoDao getInstance() {
@@ -74,28 +60,12 @@ public class PseudoDao {
 			if (accountName != null && !accountName.equals("")) {
 				// La lista con i devices a cui l'utente si è già connesso
 				// precedentemente
-				List<String> regIdList = getDevicesId(accountName);
-				/**
-				 * List<String> regIdList = mUserMap.get(accountName); if
-				 * (regIdList == null) { // Viene chiamata la prima volta che
-				 * questo utente accede regIdList = new ArrayList<String>();
-				 * mUserMap.put(accountName, regIdList); }
-				 **/
+				List<String> regIdList = DBServerCssXMPP.getIstance().getDevicesId(accountName);
 				if (!regIdList.contains(regId)) {
 					// Se il dispositivo non è già stato associato lo aggiungo
 					regIdList.add(regId);
 					// Lo salvo in modo permanente
-					try {
-						String query = " insert into userxmpp (token, devicesId) values (?, ?)";
-						PreparedStatement preparedStatement = mConnection.prepareStatement(query);
-						preparedStatement.setString(1, accountName);
-						preparedStatement.setString(2, regId);
-						preparedStatement.execute();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				} else {
-					System.out.println(accountName + " ha il  dispositivo: " + regId + " già registrato");
+					DBServerCssXMPP.getIstance().saveIstanceDeviceId(accountName, regId);
 				}
 			}
 		}
@@ -117,8 +87,7 @@ public class PseudoDao {
 	 * @return Ritorna tutti i dispositivi associati all'account
 	 */
 	public List<String> getAllRegistrationIdsForAccount(String account) {
-		// List<String> regIds = mUserMap.get(account);
-		List<String> regIds = getDevicesId(account);
+		List<String> regIds = DBServerCssXMPP.getIstance().getDevicesId(account);
 		if (regIds != null) {
 			return Collections.unmodifiableList(regIds);
 		}
@@ -143,24 +112,5 @@ public class PseudoDao {
 			nextRandom = sRandom.nextInt();
 		}
 		return Integer.toString(nextRandom);
-	}
-
-	/**
-	 * Ritorno la lista dei dispositivi associati all'utente speficiato nel
-	 * token
-	 */
-	private List<String> getDevicesId(String token) {
-		String sql = "SELECT devicesId FROM userxmpp WHERE token = '" + token + "'";
-		List<String> result = new LinkedList<String>();
-		try {
-			PreparedStatement preparedStatement = mConnection.prepareStatement(sql);
-			ResultSet results = preparedStatement.executeQuery();
-			while (results.next()) {
-				result.add(results.getString(1));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return result;
 	}
 }
