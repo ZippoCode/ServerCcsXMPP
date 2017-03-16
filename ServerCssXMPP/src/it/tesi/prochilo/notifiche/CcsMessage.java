@@ -85,13 +85,13 @@ public class CcsMessage {
 		private String messageOperation;
 		private List<String> topicsList;
 
-		public Builder(final String from, final String category, final String messageId) {
+		private Builder(final String from, final String category, final String messageId) {
 			this.from = from;
 			this.category = category;
 			this.messageId = messageId;
 		}
 
-		public Builder create(final String from, final String category, final String messageId) {
+		public static Builder create(final String from, final String category, final String messageId) {
 			return new Builder(from, category, messageId);
 		}
 

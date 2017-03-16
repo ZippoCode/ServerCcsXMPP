@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.json.simple.JSONObject;
+
 /**
  * Questa classe dialoga con il DataBase salvando e restituendo le varie
  * istanze.
@@ -15,27 +17,38 @@ import java.util.List;
  * @author Prochilo
  * @version 1.0.0
  */
-public class DBServerCssXMPP {
+public class DBServerCcsXMPP {
 
-	private static final DBServerCssXMPP istance = new DBServerCssXMPP();
-	private final String url = "jdbc:mysql://localhost:3306/servertest?autoReconnect=true";
-	private Connection mConnection;
+	private static final DBServerCcsXMPP istance = new DBServerCcsXMPP();
+	private static String url;
+	private static String user;
+	private static String password;
+	private static Connection mConnection;
 
-	private DBServerCssXMPP() {
+	private DBServerCcsXMPP() {
+	}
+
+	public static void create(JSONObject credenziali) {
 		try {
+			url = (String) credenziali.get("db_url");
+			user = (String) credenziali.get("db_user");
+			password = (String) credenziali.get("db_pass");
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			mConnection = DriverManager.getConnection(url, "root", "1234");
-		} catch (InstantiationException e) {
+			mConnection = DriverManager.getConnection(url, user, password);
+			PreparedStatement preparedStatement = mConnection.prepareStatement("SHOW TABLES LIKE 'userccs'");
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (!resultSet.next()) {
+				preparedStatement = mConnection.prepareStatement("CREATE TABLE `servertest`."
+						+ "`userccs` ( `id` INT NOT NULL AUTO_INCREMENT," + "`token` VARCHAR(255) NULL, "
+						+ "`devicesId` VARCHAR(255) NULL," + "PRIMARY KEY (`id`));");
+				preparedStatement.execute();
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
 		}
 	}
 
-	public static DBServerCssXMPP getIstance() {
+	public static DBServerCcsXMPP getIstance() {
 		return istance;
 	}
 
@@ -46,7 +59,7 @@ public class DBServerCssXMPP {
 	 * @return La lista dei dispositivi
 	 */
 	public List<String> getDevicesId(String token) {
-		String sql = "SELECT devicesId FROM userxmpp WHERE token = '" + token + "'";
+		String sql = "SELECT devicesId FROM userccs WHERE token = '" + token + "'";
 		List<String> result = new LinkedList<String>();
 		try {
 			PreparedStatement preparedStatement = mConnection.prepareStatement(sql);
@@ -68,7 +81,7 @@ public class DBServerCssXMPP {
 	 */
 	public void saveIstanceDeviceId(String token, String devideId) {
 		try {
-			String query = " INSERT INTO userxmpp (token, devicesId) VALUES (?, ?)";
+			String query = " INSERT INTO userccs (token, devicesId) VALUES (?, ?)";
 			PreparedStatement preparedStatement = mConnection.prepareStatement(query);
 			preparedStatement.setString(1, token);
 			preparedStatement.setString(2, devideId);

@@ -60,12 +60,12 @@ public class PseudoDao {
 			if (accountName != null && !accountName.equals("")) {
 				// La lista con i devices a cui l'utente si è già connesso
 				// precedentemente
-				List<String> regIdList = DBServerCssXMPP.getIstance().getDevicesId(accountName);
+				List<String> regIdList = DBServerCcsXMPP.getIstance().getDevicesId(accountName);
 				if (!regIdList.contains(regId)) {
 					// Se il dispositivo non è già stato associato lo aggiungo
 					regIdList.add(regId);
 					// Lo salvo in modo permanente
-					DBServerCssXMPP.getIstance().saveIstanceDeviceId(accountName, regId);
+					DBServerCcsXMPP.getIstance().saveIstanceDeviceId(accountName, regId);
 				}
 			}
 		}
@@ -87,7 +87,7 @@ public class PseudoDao {
 	 * @return Ritorna tutti i dispositivi associati all'account
 	 */
 	public List<String> getAllRegistrationIdsForAccount(String account) {
-		List<String> regIds = DBServerCssXMPP.getIstance().getDevicesId(account);
+		List<String> regIds = DBServerCcsXMPP.getIstance().getDevicesId(account);
 		if (regIds != null) {
 			return Collections.unmodifiableList(regIds);
 		}

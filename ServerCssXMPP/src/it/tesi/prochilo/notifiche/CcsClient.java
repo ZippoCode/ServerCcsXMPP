@@ -34,31 +34,19 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocketFactory;
 
-/**
- * Sample Smack implementation of a client for GCM Cloud Connection Server. Most
- * of it has been taken more or less verbatim from Googles documentation:
- * http://developer.android.com/google/gcm/ccs.html <br>
- * But some additions have been made. Bigger changes are annotated like that:
- * "/// new". <br>
- * Those changes have to do with parsing certain type of messages as well as
- * with sending messages to a list of recipients. The original code only covers
- * sending one message to exactly one recipient.
- */
 public class CcsClient {
 
 	public static final Logger logger = Logger.getLogger(CcsClient.class.getName());
 
-	public static final String GCM_SERVER = "fcm-xmpp.googleapis.com";
-	public static final int GCM_PORT = 5235;
-
+	public static final String FCM_SERVER = "fcm-xmpp.googleapis.com";
+	public static final int FCM_PORT = 5235;
 	public static final String GCM_ELEMENT_NAME = "gcm";
-	public static final String GCM_NAMESPACE = "google:mobile:data";
+	public static final String FCM_NAMESPACE = "google:mobile:data";
 
 	static Random random = new Random();
 	XMPPConnection connection;
 	ConnectionConfiguration config;
 
-	/// new: some additional instance and class members
 	private static CcsClient sInstance = null;
 	private String mApiKey = null;
 	private String mProjectId = null;
@@ -72,7 +60,7 @@ public class CcsClient {
 		String json;
 
 		public GcmPacketExtension(String json) {
-			super(GCM_ELEMENT_NAME, GCM_NAMESPACE);
+			super(GCM_ELEMENT_NAME, FCM_NAMESPACE);
 			this.json = json;
 		}
 
@@ -82,12 +70,11 @@ public class CcsClient {
 
 		@Override
 		public String toXML() {
-			return String.format("<%s xmlns=\"%s\">%s</%s>", GCM_ELEMENT_NAME, GCM_NAMESPACE, json, GCM_ELEMENT_NAME);
+			return String.format("<%s xmlns=\"%s\">%s</%s>", GCM_ELEMENT_NAME, FCM_NAMESPACE, json, GCM_ELEMENT_NAME);
 		}
 
 		public Packet toPacket() {
 			return new Message() {
-				// Must override toXML() because it includes a <body>
 				@Override
 				public String toXML() {
 
@@ -142,7 +129,7 @@ public class CcsClient {
 
 	private CcsClient() {
 		// Add GcmPacketExtension
-		ProviderManager.getInstance().addExtensionProvider(GCM_ELEMENT_NAME, GCM_NAMESPACE,
+		ProviderManager.getInstance().addExtensionProvider(GCM_ELEMENT_NAME, FCM_NAMESPACE,
 				new PacketExtensionProvider() {
 
 					@Override
@@ -227,7 +214,7 @@ public class CcsClient {
 				throw new IllegalArgumentException("Valore: " + key + " non consentito");
 			}
 		}
-		CcsMessage message = new CcsMessage.Builder(from, category, messageId).setToken(token)
+		CcsMessage message = CcsMessage.Builder.create(from, category, messageId).setToken(token)
 				.setMessageType(messageType).setMessageOperation(messageOperation).setTopicsList(topicsList).build();
 		return message;
 	}
@@ -359,18 +346,15 @@ public class CcsClient {
 	 * @throws XMPPException
 	 */
 	public void connect() throws XMPPException {
-		config = new ConnectionConfiguration(GCM_SERVER, GCM_PORT);
+		config = new ConnectionConfiguration(FCM_SERVER, FCM_PORT);
 		config.setSecurityMode(SecurityMode.enabled);
 		config.setReconnectionAllowed(true);
 		config.setRosterLoadedAtLogin(false);
 		config.setSendPresence(false);
 		config.setSocketFactory(SSLSocketFactory.getDefault());
 
-		// NOTE: Set to true to launch a window with information about packets
-		// sent and received
 		config.setDebuggerEnabled(mDebuggable);
 
-		// -Dsmack.debugEnabled=true
 		XMPPConnection.DEBUG_ENABLED = true;
 
 		connection = new XMPPConnection(config);
@@ -404,14 +388,13 @@ public class CcsClient {
 			}
 		});
 
-		// Handle incoming packets
 		connection.addPacketListener(new PacketListener() {
 
 			@Override
 			public void processPacket(Packet packet) {
 				logger.log(Level.INFO, "Received: " + packet.toXML());
 				Message incomingMessage = (Message) packet;
-				GcmPacketExtension gcmPacket = (GcmPacketExtension) incomingMessage.getExtension(GCM_NAMESPACE);
+				GcmPacketExtension gcmPacket = (GcmPacketExtension) incomingMessage.getExtension(FCM_NAMESPACE);
 				String json = gcmPacket.getJson();
 				try {
 					@SuppressWarnings("unchecked")
@@ -466,16 +449,20 @@ public class CcsClient {
 	}
 
 	public static void main(String[] args) {
+		if (args.length != 1) {
+			throw new IllegalArgumentException("Inserire valore json");
+		}
 		JSONParser parser = new JSONParser();
 		final String projectId;
 		final String projectKey;
 
 		try {
-			JSONObject credenziali = (JSONObject) parser.parse(new FileReader("C://server/configservercssxmpp.json"));
+			JSONObject credenziali = (JSONObject) parser.parse(new FileReader(args[0]));
 			projectId = (String) credenziali.get("projectId");
 			projectKey = (String) credenziali.get("key_server");
 			CcsClient ccsClient = CcsClient.prepareClient(projectId, projectKey, true);
 			ccsClient.connect();
+			DBServerCcsXMPP.create(credenziali);
 		} catch (XMPPException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {
