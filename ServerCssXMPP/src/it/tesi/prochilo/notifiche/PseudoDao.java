@@ -71,6 +71,17 @@ public class PseudoDao {
 		}
 	}
 
+	public void deleteRegistration(String regId, String accountName) {
+		synchronized (mRegisteredUsers) {
+			if (accountName != null && !accountName.equals("")) {
+				List<String> regIdList = DBServerCcsXMPP.getIstance().getDevicesId(accountName);
+				if (regIdList.contains(regId)) {
+					DBServerCcsXMPP.getIstance().deleteIstanceDeviceId(accountName, regId);
+				}
+			}
+		}
+	}
+
 	/**
 	 * 
 	 * @return Ritorna la lista di tutti i Disposiviti che hanno effettuato

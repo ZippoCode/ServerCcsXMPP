@@ -79,12 +79,22 @@ public class DBServerCcsXMPP {
 	 * @param token
 	 * @param devideId
 	 */
-	public void saveIstanceDeviceId(String token, String devideId) {
+	public void saveIstanceDeviceId(String token, String deviceId) {
 		try {
 			String query = " INSERT INTO userccs (token, devicesId) VALUES (?, ?)";
 			PreparedStatement preparedStatement = mConnection.prepareStatement(query);
 			preparedStatement.setString(1, token);
-			preparedStatement.setString(2, devideId);
+			preparedStatement.setString(2, deviceId);
+			preparedStatement.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteIstanceDeviceId(String token, String deviceId) {
+		try {
+			String query = " DELETE FROM userccs WHERE devicesId = '" + deviceId + "'";
+			PreparedStatement preparedStatement = mConnection.prepareStatement(query);
 			preparedStatement.execute();
 		} catch (Exception e) {
 			e.printStackTrace();

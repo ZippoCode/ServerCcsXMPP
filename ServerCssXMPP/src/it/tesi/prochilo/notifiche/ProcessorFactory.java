@@ -11,6 +11,11 @@ public class ProcessorFactory {
 	 */
 	private static final String ACTION_REGISTER = PACKAGE + ".registraId";
 	/**
+	 * Un semplice messaggio, dunque contiene i topic su cui l'utente ha
+	 * effettuato una nuova iscrizione o disiscrizione
+	 */
+	private static final String ACTION_DELETER = PACKAGE + ".eliminaId";
+	/**
 	 * Risponde con un messaggio di ECHO
 	 */
 	private static final String ACTION_ECHO = PACKAGE + ".echo";
@@ -36,6 +41,8 @@ public class ProcessorFactory {
 			return new EchoProcessor();
 		} else if (action.equals(ACTION_MESSAGE)) {
 			return new MessageProcessor();
+		} else if (action.equals(ACTION_DELETER)) {
+			return new DeleterProcessor();
 		}
 		throw new IllegalStateException("Action " + action + " is unknown");
 	}
