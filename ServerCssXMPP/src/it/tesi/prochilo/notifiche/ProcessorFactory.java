@@ -42,7 +42,7 @@ public class ProcessorFactory {
 		} else if (action.equals(ACTION_MESSAGE)) {
 			return new MessageProcessor();
 		} else if (action.equals(ACTION_DELETER)) {
-			return new DeleterProcessor();
+			return new RemoverProcessor();
 		}
 		throw new IllegalStateException("Action " + action + " is unknown");
 	}

@@ -1,6 +1,6 @@
 package it.tesi.prochilo.notifiche;
 
-public class DeleterProcessor implements PayloadProcessor {
+public class RemoverProcessor implements PayloadProcessor {
 
 	/**
 	 * Provvede ad eliminare il dispositivo identificato da From al Token	 */
